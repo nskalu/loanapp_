@@ -1,14 +1,17 @@
 ﻿using loanapp.data.Entities;
 using loanapp.Shared.Enums;
+using loanapp.Shared.Interfaces;
 using LoanApp.Data;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 
 namespace loanapp.application.Commands.Loans
 {
     public class CreateLoanApplication
     {
-        public class Command
+        public class Command: IRequest<Response>
         {
             [Required]
             public string ApplicantName { get; set; }
@@ -23,7 +26,28 @@ namespace loanapp.application.Commands.Loans
             public decimal InterestRate { get; set; }
         }
 
-        public class Handler
+        public class Response: IResponse
+        {
+            public int LoanApplicationId { get; set; }
+
+            public HttpStatusCode StatusCode { get; set; }
+
+            public string ErrorMessage { get; set; }
+
+            public Response(int Id)
+            {
+                StatusCode = HttpStatusCode.OK;
+                LoanApplicationId = Id;
+            }
+
+            public Response(HttpStatusCode statusCode, string errorMessage)
+            {
+                StatusCode = statusCode;
+                ErrorMessage = errorMessage;
+            }
+        }
+
+        public class Handler: IRequestHandler<Command, Response>
         {
             private readonly LoanAppContext _readWriteContext;
 
@@ -32,7 +56,7 @@ namespace loanapp.application.Commands.Loans
                 _readWriteContext = readWriteContext;
             }
 
-            public async Task<int> Handle(Command command)
+            public async Task<Response> Handle(Command command, CancellationToken cancellationToken)
             {
                 var today = DateTime.UtcNow.Date;
 
@@ -44,7 +68,7 @@ namespace loanapp.application.Commands.Loans
 
                 if (hasExistingApplication)
                 {
-                    throw new InvalidOperationException("A loan application with the same details already exists for today.");
+                    return new Response(HttpStatusCode.Conflict, "An application with the same details already exists for today.");
                 }
 
                 var entity = new LoanApplication
@@ -60,7 +84,7 @@ namespace loanapp.application.Commands.Loans
                 _readWriteContext.LoanApplications.Add(entity);
                 await _readWriteContext.SaveChangesAsync();
 
-                return entity.Id;
+                return new Response(entity.Id);
             }
         }
 
