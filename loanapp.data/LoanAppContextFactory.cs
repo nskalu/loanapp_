@@ -11,7 +11,7 @@ namespace LoanApp.Data
             var optionsBuilder = new DbContextOptionsBuilder<LoanAppContext>();
 
             optionsBuilder.UseMySql(
-                "server=localhost;database=LoanAppDb;user=ngozi;password=123456",
+                "server=localhost;database=LoanAppDb;user=root;password=123456",
                 new MySqlServerVersion(new Version(8, 0, 36)) 
             );
 
