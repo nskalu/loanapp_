@@ -10,26 +10,11 @@ using System.Net;
 
 namespace loanapp.application.Commands.Loans
 {
-    public class UpdateLoanApplication
+    public class DeleteLoanApplication
     {
         public class Command : IRequest<Response>
         {
-            [Required]
             public int Id { get; set; }
-
-            [Required]
-            public string ApplicantName { get; set; }
-
-            [Required]
-            public decimal LoanAmount { get; set; }
-
-            [Required]
-            public int LoanTerm { get; set; }
-
-            [Required]
-            public decimal InterestRate { get; set; }
-
-            public LoanStatus LoanStatus { get; set; }
         }
 
         public class Response : IResponse
@@ -69,8 +54,6 @@ namespace loanapp.application.Commands.Loans
             {
                 try
                 {
-                    var today = DateTime.UtcNow.Date;
-
                     var existingApplication = await _readWriteContext.LoanApplications
                         .Where(la => la.Id == command.Id).FirstOrDefaultAsync();
 
@@ -79,11 +62,7 @@ namespace loanapp.application.Commands.Loans
                         return new Response(HttpStatusCode.NotFound, "This Application was not Found.");
                     }
 
-                    existingApplication.ApplicantName = command.ApplicantName;
-                    existingApplication.LoanAmount = command.LoanAmount;
-                    existingApplication.LoanTerm = command.LoanTerm;
-                    existingApplication.InterestRate = command.InterestRate;
-                    existingApplication.LoanStatus = command.LoanStatus;
+                    _readWriteContext.LoanApplications.Remove(existingApplication);
 
                     await _readWriteContext.SaveChangesAsync();
 
@@ -92,7 +71,7 @@ namespace loanapp.application.Commands.Loans
                 catch (Exception ex)
                 {
 
-                    _logger.LogError(ex, "Error while updating loan application for {Applicant}", command.ApplicantName);
+                    _logger.LogError(ex, "Error while deleting loan application for {ApplicantId}", command.Id);
 
                     return new Response(HttpStatusCode.InternalServerError, "An error occurred while processing your request.");
                 }
