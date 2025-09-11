@@ -4,6 +4,7 @@ using loanapp.Shared.Interfaces;
 using LoanApp.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 
@@ -51,40 +52,53 @@ namespace loanapp.application.Commands.Loans
         {
             private readonly LoanAppContext _readWriteContext;
 
-            public Handler(LoanAppContext readWriteContext)
+            private readonly ILogger<Handler> _logger;
+
+            public Handler(LoanAppContext readWriteContext, ILogger<Handler> logger)
             {
                 _readWriteContext = readWriteContext;
+                _logger = logger;
             }
 
             public async Task<Response> Handle(Command command, CancellationToken cancellationToken)
             {
-                var today = DateTime.UtcNow.Date;
-
-                var hasExistingApplication = await _readWriteContext.LoanApplications
-                    .Where(la => la.ApplicantName == command.ApplicantName 
-                    && la.LoanAmount == command.LoanAmount
-                    && la.LoanTerm == command.LoanTerm
-                    && la.ApplicationDate.Date == today).AnyAsync();
-
-                if (hasExistingApplication)
+                try
                 {
-                    return new Response(HttpStatusCode.Conflict, "An application with the same details already exists for today.");
+                    var today = DateTime.UtcNow.Date;
+
+                    var hasExistingApplication = await _readWriteContext.LoanApplications
+                        .Where(la => la.ApplicantName == command.ApplicantName
+                        && la.LoanAmount == command.LoanAmount
+                        && la.LoanTerm == command.LoanTerm
+                        && la.ApplicationDate.Date == today).AnyAsync();
+
+                    if (hasExistingApplication)
+                    {
+                        return new Response(HttpStatusCode.Conflict, "An application with the same details already exists for today.");
+                    }
+
+                    var entity = new LoanApplication
+                    {
+                        ApplicantName = command.ApplicantName,
+                        LoanAmount = command.LoanAmount,
+                        LoanTerm = command.LoanTerm,
+                        InterestRate = command.InterestRate,
+                        LoanStatus = LoanStatus.Pending,
+                        ApplicationDate = DateTime.UtcNow
+                    };
+
+                    _readWriteContext.LoanApplications.Add(entity);
+                    await _readWriteContext.SaveChangesAsync();
+
+                    return new Response(entity.Id);
                 }
-
-                var entity = new LoanApplication
+                catch (Exception ex)
                 {
-                    ApplicantName = command.ApplicantName,
-                    LoanAmount = command.LoanAmount,
-                    LoanTerm = command.LoanTerm,
-                    InterestRate = command.InterestRate,
-                    LoanStatus = LoanStatus.Pending,
-                    ApplicationDate = DateTime.UtcNow
-                };
 
-                _readWriteContext.LoanApplications.Add(entity);
-                await _readWriteContext.SaveChangesAsync();
+                    _logger.LogError(ex, "Error while creating loan application for {Applicant}", command.ApplicantName);
 
-                return new Response(entity.Id);
+                    return new Response(HttpStatusCode.InternalServerError, "An error occurred while processing your request.");
+                }
             }
         }
 
