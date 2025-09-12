@@ -1,5 +1,4 @@
-﻿
-using loanapp.Shared.Enums;
+﻿using loanapp.Shared.Enums;
 using LoanApp.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json.Serialization;
 
-namespace loanapp.application.Commands.Loans
+namespace loanapp.application.Queries.Loans
 {
     public class GetLoanApplicationById
     {

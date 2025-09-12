@@ -1,5 +1,4 @@
-﻿
-using loanapp.Shared.Enums;
+﻿using loanapp.Shared.Enums;
 using loanapp.Shared.Helpers;
 using loanapp.Shared.Interfaces;
 using LoanApp.Data;
@@ -9,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json.Serialization;
 
-namespace loanapp.application.Commands.Loans
+namespace loanapp.application.Queries.Loans
 {
     public class GetLoanApplications
     {
@@ -33,7 +32,7 @@ namespace loanapp.application.Commands.Loans
 
         public class Response
         {
-            public int LoanApplicationId { get; set; }
+            public int Id { get; set; }
 
             public string ApplicantName { get; set; }
 
@@ -83,7 +82,7 @@ namespace loanapp.application.Commands.Loans
                     var existingApplications = await (from application in _readWriteContext.LoanApplications 
                     select new Response
                     {
-                        LoanApplicationId = application.Id,
+                        Id = application.Id,
                         ApplicantName = application.ApplicantName,
                         LoanAmount = application.LoanAmount,
                         LoanTerm = application.LoanTerm,
