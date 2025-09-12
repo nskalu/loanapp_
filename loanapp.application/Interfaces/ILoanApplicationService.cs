@@ -2,16 +2,9 @@
 using loanapp.application.Queries.Loans;
 using loanapp.data.Entities;
 using loanapp.Shared.Enums;
-using loanapp.Shared.Interfaces;
 using LoanApp.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using static loanapp.application.Commands.Loans.CreateLoanApplication;
 
 namespace loanapp.application.Interfaces
@@ -23,6 +16,7 @@ namespace loanapp.application.Interfaces
         Task<GetLoanApplicationById.Response> GetLoanApplicationByIdAsync(int id);
         Task<GetLoanApplications.Result> GetLoanApplicationsAsync(int pageNumber, int pageLength);
         Task<DeleteLoanApplication.Response> DeleteLoanApplication(int Id);
+        Task<int> UpdateLoanStatusAsync(int id, LoanStatus loanStatus);
 
 
     }
@@ -80,6 +74,18 @@ namespace loanapp.application.Interfaces
         public Task<DeleteLoanApplication.Response> DeleteLoanApplication(int Id)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<int> UpdateLoanStatusAsync(int id, LoanStatus loanStatus)
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var existingApplication = await _readWriteContext.LoanApplications
+                .SingleAsync(la => la.Id == id);
+
+            existingApplication.LoanStatus = loanStatus;
+
+            return await _readWriteContext.SaveChangesAsync();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿@page "/loanapplications"
 @rendermode InteractiveServer
 @using System.Net
+@using loanapp.Shared.Enums
 @using loanapp.Shared.Interfaces
 @using loanapp.application.Commands
 @using loanapp.application.Queries.Loans
@@ -48,6 +49,14 @@ else
                     <td>@app.LoanStatus</td>
                     <td>@app.ApplicationDate.ToShortDateString()</td>
                     <td>
+                        <button class="btn btn-sm btn-success me-2"
+                                @onclick="() => UpdateStatus(app.Id, LoanStatus.Approved)">
+                            Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger me-2"
+                                @onclick="() => UpdateStatus(app.Id, LoanStatus.Rejected)">
+                            Reject
+                        </button>
                         <button class="btn btn-sm btn-primary me-2"
                                 @onclick="() => EditLoan(app.Id)">
                             Edit
@@ -149,4 +158,29 @@ else
     {
         NavManager.NavigateTo("/createloan");
     }
+
+    private async Task UpdateStatus(int id, LoanStatus status)
+    {
+        var cmd = new loanapp.application.Commands.Loans.UpdateLoanStatus.Command
+        {
+            Id = id,
+            LoanStatus = status
+        };
+
+        var response = await Mediator.Send(cmd);
+
+        var currentApp = Applications.Items.FirstOrDefault(a => a.Id == id);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NoContent || response.StatusCode == System.Net.HttpStatusCode.OK)
+        {
+            // Update the item locally to reflect status change immediately
+            currentApp.LoanStatus = status;
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine(response.ErrorMessage);
+        }
+    }
+
 }
