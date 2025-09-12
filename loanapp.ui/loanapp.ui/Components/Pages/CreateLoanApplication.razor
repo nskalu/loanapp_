@@ -1,4 +1,5 @@
 ﻿@page "/createloan"
+@rendermode InteractiveServer
 @using loanapp.application.Commands.Loans
 @using MediatR
 @inject IMediator Mediator
@@ -11,7 +12,7 @@
     <div class="alert @StatusClass">@StatusMessage</div>
 }
 
-<EditForm EditContext="LoanFormContext" FormName="CreateLoanForm" OnValidSubmit="Submit">
+<EditForm EditContext="LoanFormContext" FormName="CreateLoanForm">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
@@ -43,8 +44,14 @@
 </EditForm>
 
 @code {
-    private loanapp.application.Commands.Loans.CreateLoanApplication.Command LoanModel
-        = new application.Commands.Loans.CreateLoanApplication.Command { ApplicantName = "Josh", InterestRate = 5, LoanAmount = 5000, LoanTerm = 1};
+        private loanapp.application.Commands.Loans.CreateLoanApplication.Command LoanModel
+    = new application.Commands.Loans.CreateLoanApplication.Command();
+
+    private string ApplicantName;
+    private int LoanTerm;
+    private decimal InterestRate;
+    private decimal LoanAmount;
+
 
     private EditContext LoanFormContext;
 
