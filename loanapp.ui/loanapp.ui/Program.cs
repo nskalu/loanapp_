@@ -1,6 +1,7 @@
 using loanapp.application.Commands.Loans;
-using loanapp.ui.Components;
+using loanapp.Application;
 using loanapp.ui.Client;
+using loanapp.ui.Components;
 using LoanApp.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -23,6 +24,8 @@ builder.Services.AddDbContext<LoanAppContext>(options =>
 builder.Services.AddMediatR(m =>
     m.RegisterServicesFromAssembly(typeof(CreateLoanApplication.Handler).Assembly)
 );
+
+builder.Services.AddApplication();
 
 var app = builder.Build();
 

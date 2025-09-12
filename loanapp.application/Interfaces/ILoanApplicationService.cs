@@ -1,0 +1,85 @@
+﻿using loanapp.application.Commands.Loans;
+using loanapp.application.Queries.Loans;
+using loanapp.data.Entities;
+using loanapp.Shared.Enums;
+using loanapp.Shared.Interfaces;
+using LoanApp.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using static loanapp.application.Commands.Loans.CreateLoanApplication;
+
+namespace loanapp.application.Interfaces
+{
+    public interface ILoanApplicationService
+    {
+        Task<CreateLoanApplication.Response> CreateLoanApplicationAsync(string applicantName, decimal loanAmount, int loanTerm, decimal interestRate);
+        Task<UpdateLoanApplication.Response> UpdateLoanApplicationAsync(int id, string applicantName, decimal loanAmount, int loanTerm, decimal interestRate, LoanStatus loanStatus);
+        Task<GetLoanApplicationById.Response> GetLoanApplicationByIdAsync(int id);
+        Task<GetLoanApplications.Result> GetLoanApplicationsAsync(int pageNumber, int pageLength);
+        Task<DeleteLoanApplication.Response> DeleteLoanApplication(int Id);
+
+
+    }
+
+    public class LoanApplicationService : ILoanApplicationService
+    {
+        private readonly LoanAppContext _readWriteContext;
+
+        public LoanApplicationService(LoanAppContext readWriteContext)
+        { 
+            _readWriteContext = readWriteContext;
+        }
+        public async Task<CreateLoanApplication.Response> CreateLoanApplicationAsync(string applicantName, decimal loanAmount, int loanTerm, decimal interestRate)
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var hasExistingApplication = await _readWriteContext.LoanApplications
+                .Where(la => la.ApplicantName == applicantName
+                && la.LoanAmount == loanAmount
+                && la.LoanTerm == loanTerm
+                && la.ApplicationDate.Date == today).AnyAsync();
+
+            if (hasExistingApplication)
+            {
+                return new Response(HttpStatusCode.Conflict, "An application with the same details already exists for today.");
+            }
+
+            var entity = new LoanApplication
+            {
+                ApplicantName = applicantName,
+                LoanAmount = loanAmount,
+                LoanTerm = loanTerm,
+                InterestRate = interestRate,
+                LoanStatus = LoanStatus.Pending,
+                ApplicationDate = DateTime.UtcNow
+            };
+
+            _readWriteContext.LoanApplications.Add(entity);
+            await _readWriteContext.SaveChangesAsync();
+
+            return new Response(entity.Id);
+        }
+        public Task<UpdateLoanApplication.Response> UpdateLoanApplicationAsync(int id, string applicantName, decimal loanAmount, int loanTerm, decimal interestRate, LoanStatus loanStatus)
+        {
+            throw new NotImplementedException();
+        }
+        public Task<GetLoanApplicationById.Response> GetLoanApplicationByIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+        public Task<GetLoanApplications.Result> GetLoanApplicationsAsync(int pageNumber, int pageLength)
+        {
+            throw new NotImplementedException();
+        }
+        public Task<DeleteLoanApplication.Response> DeleteLoanApplication(int Id)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

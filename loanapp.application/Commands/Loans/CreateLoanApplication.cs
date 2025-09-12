@@ -1,4 +1,5 @@
-﻿using loanapp.data.Entities;
+﻿using loanapp.application.Interfaces;
+using loanapp.data.Entities;
 using loanapp.Shared.Enums;
 using loanapp.Shared.Interfaces;
 using LoanApp.Data;
@@ -50,13 +51,13 @@ namespace loanapp.application.Commands.Loans
 
         public class Handler: IRequestHandler<Command, Response>
         {
-            private readonly LoanAppContext _readWriteContext;
+            private readonly ILoanApplicationService _loanApplicationService;
 
             private readonly ILogger<Handler> _logger;
 
-            public Handler(LoanAppContext readWriteContext, ILogger<Handler> logger)
+            public Handler(ILoanApplicationService loanApplicationService, ILogger<Handler> logger)
             {
-                _readWriteContext = readWriteContext;
+                _loanApplicationService = loanApplicationService;
                 _logger = logger;
             }
 
@@ -64,33 +65,9 @@ namespace loanapp.application.Commands.Loans
             {
                 try
                 {
-                    var today = DateTime.UtcNow.Date;
-
-                    var hasExistingApplication = await _readWriteContext.LoanApplications
-                        .Where(la => la.ApplicantName == command.ApplicantName
-                        && la.LoanAmount == command.LoanAmount
-                        && la.LoanTerm == command.LoanTerm
-                        && la.ApplicationDate.Date == today).AnyAsync();
-
-                    if (hasExistingApplication)
-                    {
-                        return new Response(HttpStatusCode.Conflict, "An application with the same details already exists for today.");
-                    }
-
-                    var entity = new LoanApplication
-                    {
-                        ApplicantName = command.ApplicantName,
-                        LoanAmount = command.LoanAmount.GetValueOrDefault(),
-                        LoanTerm = command.LoanTerm.GetValueOrDefault(),
-                        InterestRate = command.InterestRate.GetValueOrDefault(),
-                        LoanStatus = LoanStatus.Pending,
-                        ApplicationDate = DateTime.UtcNow
-                    };
-
-                    _readWriteContext.LoanApplications.Add(entity);
-                    await _readWriteContext.SaveChangesAsync();
-
-                    return new Response(entity.Id);
+                   return await _loanApplicationService.CreateLoanApplicationAsync
+                        (command.ApplicantName, command.LoanAmount.GetValueOrDefault(),
+                        command.LoanTerm.GetValueOrDefault(), command.InterestRate.GetValueOrDefault());
                 }
                 catch (Exception ex)
                 {
