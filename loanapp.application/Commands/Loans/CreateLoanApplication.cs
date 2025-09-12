@@ -15,16 +15,21 @@ namespace loanapp.application.Commands.Loans
     {
         public class Command: IRequest<Response>
         {
-            [Required]
+
+            [Required(ErrorMessage = "Applicant Name is required")]
             public string ApplicantName { get; set; }
 
-            [Required]
+            [Required(ErrorMessage = "Loan Amount is required")]
+            [Range(0.01, double.MaxValue, ErrorMessage = "Loan Amount must be greater than 0")]
+
             public decimal? LoanAmount { get; set; }
 
-            [Required]
+            [Required(ErrorMessage = "Loan Term is required")]
+            [Range(1, 12, ErrorMessage = "Loan Term must be between 1 and 12 months")]
             public int? LoanTerm { get; set; }
 
-            [Required]
+            [Required(ErrorMessage = "Interest Rate is required")]
+            [Range(0, double.MaxValue, ErrorMessage = "Interest Rate cannot be negative")]
             public decimal? InterestRate { get; set; }
         }
 

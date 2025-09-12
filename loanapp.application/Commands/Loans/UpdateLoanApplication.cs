@@ -17,17 +17,21 @@ namespace loanapp.application.Commands.Loans
             [Required]
             public int Id { get; set; }
 
-            [Required]
+            [Required(ErrorMessage ="Applicant Name is required")]
             public string ApplicantName { get; set; }
 
-            [Required]
-            public decimal LoanAmount { get; set; }
+            [Required(ErrorMessage = "Loan Amount is required")]
+            [Range(0.01, double.MaxValue, ErrorMessage = "Loan Amount must be greater than 0")]
 
-            [Required]
-            public int LoanTerm { get; set; }
+            public decimal? LoanAmount { get; set; }
 
-            [Required]
-            public decimal InterestRate { get; set; }
+            [Required(ErrorMessage = "Loan Term is required")]
+            [Range(1, 12, ErrorMessage = "Loan Term must be between 1 and 12 months")]
+            public int? LoanTerm { get; set; }
+
+            [Required(ErrorMessage = "Interest Rate is required")]
+            [Range(0, double.MaxValue, ErrorMessage = "Interest Rate cannot be negative")]
+            public decimal? InterestRate { get; set; }
 
             public LoanStatus LoanStatus { get; set; }
         }
@@ -80,10 +84,9 @@ namespace loanapp.application.Commands.Loans
                     }
 
                     existingApplication.ApplicantName = command.ApplicantName;
-                    existingApplication.LoanAmount = command.LoanAmount;
-                    existingApplication.LoanTerm = command.LoanTerm;
-                    existingApplication.InterestRate = command.InterestRate;
-                    existingApplication.LoanStatus = command.LoanStatus;
+                    existingApplication.LoanAmount = command.LoanAmount.Value;
+                    existingApplication.LoanTerm = command.LoanTerm.Value;
+                    existingApplication.InterestRate = command.InterestRate.Value;
 
                     await _readWriteContext.SaveChangesAsync();
 

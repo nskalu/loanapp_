@@ -48,7 +48,7 @@
 
         <div class="mb-3">
             <label>Loan Status</label>
-            <InputSelect class="form-control" @bind-Value="LoanModel.LoanStatus">
+            <InputSelect class="form-control" @bind-Value="LoanModel.LoanStatus" disabled>
                 @foreach (var status in Enum.GetValues<LoanStatus>())
                 {
                     <option value="@status">@status</option>
