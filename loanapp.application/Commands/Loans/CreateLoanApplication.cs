@@ -18,13 +18,13 @@ namespace loanapp.application.Commands.Loans
             public string ApplicantName { get; set; }
 
             [Required]
-            public decimal LoanAmount { get; set; }
+            public decimal? LoanAmount { get; set; }
 
             [Required]
-            public int LoanTerm { get; set; }
+            public int? LoanTerm { get; set; }
 
             [Required]
-            public decimal InterestRate { get; set; }
+            public decimal? InterestRate { get; set; }
         }
 
         public class Response: IResponse
@@ -80,9 +80,9 @@ namespace loanapp.application.Commands.Loans
                     var entity = new LoanApplication
                     {
                         ApplicantName = command.ApplicantName,
-                        LoanAmount = command.LoanAmount,
-                        LoanTerm = command.LoanTerm,
-                        InterestRate = command.InterestRate,
+                        LoanAmount = command.LoanAmount.GetValueOrDefault(),
+                        LoanTerm = command.LoanTerm.GetValueOrDefault(),
+                        InterestRate = command.InterestRate.GetValueOrDefault(),
                         LoanStatus = LoanStatus.Pending,
                         ApplicationDate = DateTime.UtcNow
                     };
