@@ -31,18 +31,6 @@ namespace loanapp.application.Interfaces
         }
         public async Task<CreateLoanApplication.Response> CreateLoanApplicationAsync(string applicantName, decimal loanAmount, int loanTerm, decimal interestRate)
         {
-            var today = DateTime.UtcNow.Date;
-
-            var hasExistingApplication = await _readWriteContext.LoanApplications
-                .Where(la => la.ApplicantName == applicantName
-                && la.LoanAmount == loanAmount
-                && la.LoanTerm == loanTerm
-                && la.ApplicationDate.Date == today).AnyAsync();
-
-            if (hasExistingApplication)
-            {
-                return new Response(HttpStatusCode.Conflict, "An application with the same details already exists for today.");
-            }
 
             var entity = new LoanApplication
             {
