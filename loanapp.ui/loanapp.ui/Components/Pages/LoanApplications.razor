@@ -10,6 +10,10 @@
 
 <h3>Loan Applications</h3>
 
+<div class="mb-3">
+    <button class="btn btn-success" @onclick="AddNewLoan">Add New</button>
+</div>
+
 @if (Applications == null)
 {
     <p><em>Loading...</em></p>
@@ -57,23 +61,51 @@ else
             }
         </tbody>
     </table>
+
+    <nav>
+        <ul class="pagination">
+            <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="PrevPage">Previous</button>
+            </li>
+            @for (int i = 1; i <= TotalPages; i++)
+            {
+                <li class="page-item @(CurrentPage == i ? "active" : "")">
+                    <button class="page-link" @onclick="() => GoToPage(i)">@i</button>
+                </li>
+            }
+            <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="NextPage">Next</button>
+            </li>
+        </ul>
+    </nav>
 }
 
 @code {
     private GetLoanApplications.Result Applications;
+    private int CurrentPage = 1;
+    private int PageLength = 2;
+    private int TotalPages => (int)Math.Ceiling((double)(Applications?.TotalCount ?? 0) / PageLength);
+
     
     protected override async Task OnInitializedAsync()
     {
+        await LoadPage(CurrentPage);
+    }
+
+    private async Task LoadPage(int page)
+    {
+        CurrentPage = page;
+
         // Call the query via Mediatr
         var command = new GetLoanApplications.Query
         {
-            Page = 1,
-            PageLength = 10
+            Page = CurrentPage,
+            PageLength = PageLength
         };
 
-        var result = await Mediator.Send(command);
-        Applications = result;
+        Applications = await Mediator.Send(command);
     }
+
 
     private void EditLoan(int id)
     {
@@ -94,5 +126,27 @@ else
         {
             Console.WriteLine(response.ErrorMessage);
         }
+    }
+
+    private async Task PrevPage()
+    {
+        if (CurrentPage > 1)
+            await LoadPage(CurrentPage - 1);
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages)
+            await LoadPage(CurrentPage + 1);
+    }
+
+    private async Task GoToPage(int page)
+    {
+        await LoadPage(page);
+    }
+
+    private void AddNewLoan()
+    {
+        NavManager.NavigateTo("/createloan");
     }
 }
