@@ -1,0 +1,64 @@
+﻿@page "/loanapplications"
+@using loanapp.Shared.Interfaces
+@using loanapp.application.Commands
+@using loanapp.application.Queries.Loans
+@using MediatR
+@inject IMediator Mediator
+
+<h3>Loan Applications</h3>
+
+@if (Applications == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!Applications.Items.Any())
+{
+    <p>No loan applications found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Applicant Name</th>
+                <th>Amount</th>
+                <th>Term</th>
+                <th>Interest %</th>
+                <th>Status</th>
+                <th>Application Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var app in Applications.Items)
+            {
+                <tr>
+                    <td>@app.Id</td>
+                    <td>@app.ApplicantName</td>
+                    <td>@app.LoanAmount</td>
+                    <td>@app.LoanTerm</td>
+                    <td>@app.InterestRate</td>
+                    <td>@app.LoanStatus</td>
+                    <td>@app.ApplicationDate.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private GetLoanApplications.Result Applications;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Call the query via Mediatr
+        var command = new GetLoanApplications.Query
+        {
+            Page = 1,
+            PageLength = 10
+        };
+
+        var result = await Mediator.Send(command);
+        Applications = result;
+    }
+}
