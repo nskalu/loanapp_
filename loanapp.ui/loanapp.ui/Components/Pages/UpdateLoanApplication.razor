@@ -1,0 +1,132 @@
+﻿@page "/updateloan/{Id:int}"
+@rendermode InteractiveServer
+@using loanapp.application.Commands.Loans
+@using loanapp.application.Queries.Loans
+@using MediatR
+@using loanapp.Shared.Enums
+@inject IMediator Mediator
+@inject NavigationManager Navigation
+
+<h3>Update Loan Application</h3>
+
+@if (!string.IsNullOrEmpty(StatusMessage))
+{
+    <div class="alert @StatusClass">@StatusMessage</div>
+}
+
+@if (LoanModel != null)
+{
+    <EditForm Model="LoanModel" OnValidSubmit="Submit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <input type="hidden" value="LoanModel.Id" />
+
+        <div class="mb-3">
+            <label>Applicant Name</label>
+            <InputText class="form-control" @bind-Value="LoanModel.ApplicantName" />
+            <ValidationMessage For="@(() => LoanModel.ApplicantName)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Loan Amount</label>
+            <InputNumber class="form-control" @bind-Value="LoanModel.LoanAmount" />
+            <ValidationMessage For="@(() => LoanModel.LoanAmount)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Loan Term (months)</label>
+            <InputNumber class="form-control" @bind-Value="LoanModel.LoanTerm" />
+            <ValidationMessage For="@(() => LoanModel.LoanTerm)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Interest Rate (%)</label>
+            <InputNumber class="form-control" @bind-Value="LoanModel.InterestRate" />
+            <ValidationMessage For="@(() => LoanModel.InterestRate)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Loan Status</label>
+            <InputSelect class="form-control" @bind-Value="LoanModel.LoanStatus">
+                @foreach (var status in Enum.GetValues<LoanStatus>())
+                {
+                    <option value="@status">@status</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update</button>
+    </EditForm>
+}
+else
+{
+    <p><em>Loading loan application...</em></p>
+}
+
+@code {
+    private loanapp.application.Commands.Loans.UpdateLoanApplication.Command LoanModel;
+    private string StatusMessage = string.Empty;
+    private string StatusClass = "";
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            
+            var query = new GetLoanApplicationById.Query { Id = Id };
+            var result = await Mediator.Send(query);
+
+            if (result != null && result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                LoanModel = new loanapp.application.Commands.Loans.UpdateLoanApplication.Command
+                {
+                    Id = Id,
+                    ApplicantName = result.ApplicantName,
+                    LoanAmount = result.LoanAmount,
+                    LoanTerm = result.LoanTerm,
+                    InterestRate = result.InterestRate,
+                    LoanStatus = result.LoanStatus
+                };
+            }
+            else
+            {
+                StatusMessage = result?.ErrorMessage ?? "Loan application not found.";
+                StatusClass = "alert-danger";
+            }
+        }
+        catch
+        {
+            StatusMessage = "An unexpected error occurred while loading data.";
+            StatusClass = "alert-danger";
+        }
+    }
+
+    private async Task Submit()
+    {
+        try
+        {
+            var response = await Mediator.Send(LoanModel);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                StatusMessage = "Loan application updated successfully!";
+                StatusClass = "alert-success";
+                Navigation.NavigateTo("/loanapplications");
+            }
+            else
+            {
+                StatusMessage = response.ErrorMessage;
+                StatusClass = "alert-danger";
+            }
+        }
+        catch
+        {
+            StatusMessage = "An unexpected error occurred.";
+            StatusClass = "alert-danger";
+        }
+    }
+}

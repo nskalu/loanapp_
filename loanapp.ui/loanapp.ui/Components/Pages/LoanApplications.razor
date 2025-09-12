@@ -1,9 +1,12 @@
 ﻿@page "/loanapplications"
+@rendermode InteractiveServer
+@using System.Net
 @using loanapp.Shared.Interfaces
 @using loanapp.application.Commands
 @using loanapp.application.Queries.Loans
 @using MediatR
 @inject IMediator Mediator
+@inject NavigationManager NavManager
 
 <h3>Loan Applications</h3>
 
@@ -40,6 +43,16 @@ else
                     <td>@app.InterestRate</td>
                     <td>@app.LoanStatus</td>
                     <td>@app.ApplicationDate.ToShortDateString()</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-2"
+                                @onclick="() => EditLoan(app.Id)">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger"
+                                @onclick="() => DeleteLoan(app.Id)">
+                            Delete
+                        </button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -60,5 +73,26 @@ else
 
         var result = await Mediator.Send(command);
         Applications = result;
+    }
+
+    private void EditLoan(int id)
+    {
+        NavManager.NavigateTo($"/updateloan/{id}");
+    }
+
+    private async Task DeleteLoan(int id)
+    {
+        var cmd = new loanapp.application.Commands.Loans.DeleteLoanApplication.Command { Id = id };
+        var response = await Mediator.Send(cmd);
+
+        if (response.StatusCode == HttpStatusCode.NoContent || response.StatusCode == HttpStatusCode.OK)
+        {
+            Applications.Items = Applications.Items.Where(l => l.Id != id).ToList();
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine(response.ErrorMessage);
+        }
     }
 }
